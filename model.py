@@ -12,7 +12,7 @@ from scipy import ndimage
 import cv2
 from keras.applications.mobilenetv2 import mobilenet_v2
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, Dropout, Conv2D, AveragePooling2D, Lambda
+from keras.layers import Dense, Flatten, Dropout, Conv2D, AveragePooling2D, Lambda, Cropping2D
 
 
 def create_model_architecture(input_shape=(160, 320, 3)):
@@ -20,6 +20,9 @@ def create_model_architecture(input_shape=(160, 320, 3)):
     ### Data Preprocessing ###
     # Norming Pixels and mean centering
     model.add(Lambda(lambda x: (x / 255.0) - 0.5, input_shape=(160,320,3)))
+    # Cropping image to remove unnecesary and confusing horizon and car hood.
+    model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
+    ### LeNet 5 ###pyt
     # Convolutional Layer 1
     model.add(Conv2D(filters=6, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
     model.add(AveragePooling2D())
