@@ -26,10 +26,16 @@ def create_model_architecture(input_shape=(160, 320, 3)):
     model.add(Cropping2D(cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3)))
     ### LeNet 5 ###
     # Convolutional Layer 1
-    model.add(Conv2D(filters=6, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+    model.add(Conv2D(filters=10, kernel_size=(5, 5), activation='elu', input_shape=input_shape))
     model.add(AveragePooling2D())
-    # Convolutional Layer 2
-    model.add(Conv2D(filters=16, kernel_size=(3, 3), activation='relu'))
+    # Convolutional layer 2
+    model.add(Conv2D(filters=20, kernel_size=(5, 5), activation='elu', input_shape=input_shape))
+    model.add(AveragePooling2D())
+    # Convolutional Layer 3
+    model.add(Conv2D(filters=30, kernel_size=(3, 3), activation='elu'))
+    model.add(AveragePooling2D())
+    # Convolutional Layer 4
+    model.add(Conv2D(filters=40, kernel_size=(3, 3), activation='elu'))
     model.add(AveragePooling2D())
     # Flatten Layer
     model.add(Flatten())
@@ -37,8 +43,12 @@ def create_model_architecture(input_shape=(160, 320, 3)):
     model.add(Dropout(0.2))
     # Fully connected 1
     model.add(Dense(units=120, activation='relu'))
+    # Dropout
+    model.add(Dropout(0.2))
     # Fully connected 2
     model.add(Dense(units=84, activation='relu'))
+    # Dropout
+    model.add(Dropout(0.2))
     # Fully connected 3 - Gives the steering angle
     model.add(Dense(units=1))
     return model
@@ -56,7 +66,7 @@ def generator(samples, batch_size=32):
             for batch_sample in batch_samples:
                 angle = float(batch_sample[3])
                 # create adjusted steering measurements for the side camera images
-                correction = 0.3
+                correction = 0.25
                 angle_left = angle + correction
                 angle_right = angle - correction
                 angles.extend((angle, angle_left, angle_right))
@@ -77,8 +87,8 @@ def generator(samples, batch_size=32):
                 augmented_angles.append(-1.0 * angle)
 
             # After some experimentation, it turns out that only using non-flipped data works better
-            X_train = np.array(images)
-            y_train = np.array(angles)
+            X_train = np.array(augmented_images)
+            y_train = np.array(augmented_angles)
             yield sklearn.utils.shuffle(X_train, y_train)
 
 
@@ -113,5 +123,5 @@ if __name__ == '__main__':
                         steps_per_epoch=ceil(len(train_samples) / batch_size),
                         validation_data=validation_generator,
                         validation_steps=ceil(len(validation_samples) / batch_size),
-                        epochs=7, verbose=1)
+                        epochs=6, verbose=1)
     model.save('model.h5')
