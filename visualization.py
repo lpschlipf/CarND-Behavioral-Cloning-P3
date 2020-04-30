@@ -56,8 +56,8 @@ if __name__ == '__main__':
             augmented_images.append(cv2.flip(image, 1))
             augmented_angles.append(-1.0 * angle)
 
-        X_train = np.array(images)
-        y_train = np.array(angles)
+        X_train = np.array(augmented_images)
+        y_train = np.array(augmented_angles)
 
         print('The number of used samples: {}, that equals a number of images of {}'.format(num_samples, X_train.shape))
 

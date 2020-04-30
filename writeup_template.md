@@ -74,8 +74,9 @@ and almost immediately drove off the track.
 The next step to improve the performance was to collect more data. After another training session, 
 the model clearly performed better, but was not able to drive very far before driving off the track.
 
-For this reason, a much more suitable architecture, the LeNet-5 was chosen, as it was shown to work,
-very well with pattern recognition, which is the gist of what we want to achieve here.
+For this reason, a much more suitable architecture, a modified version of LeNet-5 was chosen,
+as it was shown to work very well with pattern recognition, which is the gist of what we want to
+achieve here.
 
 After some architecture adjustments, all described below in detail and more data collection,
 the vehicle is able to drive the track autonomously without ever leaving the track and is able to
@@ -90,7 +91,7 @@ The neural network architecture pipeline is built in the function
 ```
 create_model_architecture(input_shape=(160, 320, 3))
 ```
-in  model.py (lines 20 - 44), and expects arrays of dimensions (160, 320 , 3) as an input (images
+in  model.py (lines 20 - 54), and expects arrays of dimensions (160, 320 , 3) as an input (images
 with three color channels).
 
 Before the input into the neurons, there is a data processing block using keras lambda layers.
@@ -105,26 +106,35 @@ to only be driving in a flat world). This is shown in the image below:
 on the left and exemplary input camera image is shown, while on the left the input to the first
 convolutional layer is depicted.
 
-Subsequently, the LeNet-5 architecture follows, as first described by Yann LeCun et al.
-[LeCun, Y.;
-Bottou, L.; Bengio, Y. & Haffner, P. (1998).
+Subsequently, a modified version of the LeNet-5 architecture
+[LeCun, Y.; Bottou, L.; Bengio, Y. & Haffner, P. (1998).
 Gradient-based learning applied to document recognition.
 Proceedings of the IEEE. 86(11): 2278 - 2324]
+was used, with the main difference being two additional convolutional layers introduced to the
+network.
+
 Which consists of:
-* A convolution layer using 6 kernels with a size of 3x3 using the ReLU activation function
+* A convolution layer using 10 kernels with a size of 5x5 using the Exponential Linear Unit (ELU)
+activation function
 * An average pooling layer with a pooling size of 2x2
-* A convolution layer with 16 kernels and with a size of 3x3 using the ReLU activation function
+* A convolution layer with 20 kernels and with a size of 5x5 using the ELU activation function
+* An average pooling layer with a pooling size of 2x2
+* A convolution layer with 30 kernels and with a size of 3x3 using the ELU activation function
+* An average pooling layer with a pooling size of 2x2
+* A convolution layer with 40 kernels and with a size of 3x3 using the ELU activation function
 * An average pooling layer with a pooling size of 2x2
 * A flattening layer and a subsequent dropout layer that randomly drops 20% of the data to prevent
 overfitting
 * A fully connected layer with 120 neurons and ReLU activation
-* A fully connected layer with 60 neurons and ReLU activation
+* A dropout layer randomly dropping 20% of training data
+* A fully connected layer with 84 neurons and ReLU activation
+* A dropout layer randomly dropping 20% of training data
 * A fully connected layer with 1 neurons and no activation function as it's output is the steering
 angle
 
 Certainly there can be more improvements wihtin this model, that have not been explored yet, as for
 example an adjustment of convolutional kernel sizes, to capture large patterns better, or additional
-convolutional layer within the network. Moreover another architecture could have been chosen, while
+convolutional layers within the network. Moreover another architecture could have been chosen, while
 the convolutional approach seems to be the most appropriate one overall.
 
 #### 3. Creation of the Training Set & Training Process
@@ -159,33 +169,31 @@ which doubles the size of the dataset.
 Furthermore, each recording actually consists of two additional cameras to the left and the right
 of the vehicle, which can also be utilized for training. However, the steering angles for these
 cameras have to be adjusted, as they are mounted in different positions. Through trial and error 
-a correction factor of 0.3° was found to be suitable, which was then used for training. The three
+a correction factor of 0.2° was found to be suitable, which was then used for training. The three
 camera images with their corrected angles at one timestamp are shown in the image below.
 
 ![alt text][image6]
 
-Yet, it was found that using both data enhancement methods, flipping and all cameras, actually
-achieves a bit worse performance than using just one of them and in the final model, no flipping
-of camera images has been used (see the useage of images and angles instead of augmented_images and
-augmented_angles in line 80 and 81 of model.py).
-This could for example stem from a bad correction angle.
+Finally, a few parts of the tracks, mainly in sharp turns, still proved to be difficult to handle
+for the network and were thus recorded a couple of additional times.
 
-After the collection process, the final dataset consists of 51204 images and their corresponding
-steering angles. The sheer size of this data drives the RAM capacity allocated to many python
-environments to or beyond their limits, and so the data collection and readout was implemented using
-a python generator, that reads out and stores only 32 images at a time in the RAM.
+After the collection and subsequent data augmentation process, the final dataset consists of 115894
+images (half of them inverted) and their corresponding steering angles. The sheer size of this data
+drives the RAM capacity allocated to many python environments to or beyond their limits, and so the
+data collection and readout was implemented using a python generator, that reads out and stores
+only 32 images at a time in the RAM.
 The implementation is done in the function 
 ```
 generator(samples, batch_size=32)
 ```
-in lines 47-82 in model.py, where also the angle correction and (not used) image inversion can be
+in lines 57-92 in model.py, where also the angle correction and (not used) image inversion can be
 found.
 
-Finally the data was randomly shuffled 20% of the data were put into the validation set. 
+Finally the data was randomly shuffled and 20% of the data were put into the validation set. 
 
 The loss function used for the training to optimize on was the mean squared error and as an adam
 optimizer was used, it was not necessary to tune the learning rate of the training.
 The loss on the validation set was utilized to determine if the model was over or under fitting and 
-accordingly the ideal number of epochs was determined to be 7 as evidenced by no more change in loss
-on training or validation set (lines 111 -116 in model.py).
+accordingly the ideal number of epochs was determined to be 6 as evidenced by no more change in loss
+on training or validation set (lines 121 -126 in model.py).
 

@@ -29,7 +29,7 @@ def create_model_architecture(input_shape=(160, 320, 3)):
     model.add(Conv2D(filters=10, kernel_size=(5, 5), activation='elu', input_shape=input_shape))
     model.add(AveragePooling2D())
     # Convolutional layer 2
-    model.add(Conv2D(filters=20, kernel_size=(5, 5), activation='elu', input_shape=input_shape))
+    model.add(Conv2D(filters=20, kernel_size=(5, 5), activation='elu'))
     model.add(AveragePooling2D())
     # Convolutional Layer 3
     model.add(Conv2D(filters=30, kernel_size=(3, 3), activation='elu'))
